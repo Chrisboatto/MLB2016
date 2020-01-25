@@ -1,0 +1,8 @@
+#Answer Clayton Kershaw
+
+      Pitcher Count  Win_Pct Win_Per_Start
+1   c kershaw    25 16.97155     0.6788621
+2   j arrieta    35 23.20879     0.6631083
+3  m scherzer    36 23.49800     0.6527222
+4    j lester    37 24.02386     0.6492935
+5 s strasburg    24 15.33244     0.6388515

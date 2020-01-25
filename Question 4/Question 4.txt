@@ -1,0 +1,89 @@
+# Which starting pitcher was the largest favorite on average to win, for any pitcher with >= 10 starts?
+
+# I used the unnest() to bring out the dataset within the Lines column from the MLB2016 data
+
+MLB2016_1 <- unnest(MLB2016, Lines)
+
+# I then created multiple columns to show both the Home and Away win percentages using the mutate() and odds.converter functions
+
+MLB2016_1 <- mutate(MLB2016_1, Away_Win_Pct =  odds.converter::odds.us2prob(MLB2016_1$MoneyUS1))
+
+MLB2016_1 <- mutate(MLB2016_1, Home_Win_Pct =  odds.converter::odds.us2prob(MLB2016_1$MoneyUS2))
+
+# Using mutate() I created a win difference column between the home and away win percentages
+
+MLB2016_1 <- mutate(MLB2016_1, Win_Pct_Diff = Away_Win_Pct - Home_Win_Pct)
+
+# Using the group_by() and ungroup() I pulled the last line from each game to show the win percentage of each game.
+
+MLB2016_2 <- MLB2016_1 %>% group_by(GameID) %>% filter(EnteredDateTimeUTC == max(EnteredDateTimeUTC)) %>% ungroup()
+
+# Using select() I created a new data frame with two columns; StartingPitcher (to show who pitched for both Away and Home respectively) and Win_Pct (both Away and Home respectively)
+
+AwayPitcher <- select(MLB2016_2, c(AwayStartingPitcher, Away_Win_Pct))
+
+HomePitcher <- select(MLB2016_2, c(HomeStartingPitcher, Home_Win_Pct))
+
+# In order to tally the amount of times a pitcher occurs I then had to create a seperate column 
+
+AwayPitcher <- mutate(AwayPitcher, Count = 1)
+
+HomePitcher <- mutate(HomePitcher, Count = 1)
+
+# Renamed the columns for easier understanding using the rename()
+
+AwayPitcher <- rename(AwayPitcher, Pitcher = AwayStartingPitcher)
+
+HomePitcher <- rename(HomePitcher, Pitcher = HomeStartingPitcher)
+
+AwayPitcher <- rename(AwayPitcher, Win_Pct = Away_Win_Pct)
+
+HomePitcher <- rename(HomePitcher, Win_Pct = Home_Win_Pct)
+
+# Used rbind.fill() to bind both the HomePitcher and AwayPitcher 
+
+Pitcher_Full <- rbind.fill(HomePitcher, AwayPitcher)
+
+# Converted the Count column to numeric
+
+Pitcher_Full$Count <- as.numeric(Pitcher_Full$Count)
+
+# Split the below data into subsets based off total of the Count and Win_Pct columns using aggregate function
+
+Pitcher_Count_agg <- aggregate(Pitcher_Full$Count ~ Pitcher_Full$Pitcher, data = Pitcher_Full, FUN = sum, na.rm = TRUE)
+
+Pitcher_Win_agg <- aggregate(Pitcher_Full$Win_Pct ~ Pitcher_Full$Pitcher, data = Pitcher_Full, FUN = sum, na.rm = TRUE)
+
+# Renamed the column
+
+Pitcher_Win_agg <- rename(Pitcher_Win_agg, Pitcher = 'Pitcher_Full$Pitcher')
+
+# Bound both above subsets together
+
+Pitcher_Full <- cbind(Pitcher_Count_agg, Pitcher_Win_agg)
+
+# Removed the Pitcher column using select()
+
+Pitcher_Full <- select(Pitcher_Full, -c(Pitcher))
+
+# Renamed the following columns
+
+Pitcher_Full <- rename(Pitcher_Full, Pitcher = 'Pitcher_Full$Pitcher')
+
+Pitcher_Full <- rename(Pitcher_Full, Count = 'Pitcher_Full$Count')
+
+Pitcher_Full <- rename(Pitcher_Full, Win_Pct = 'Pitcher_Full$Win_Pct')
+
+# Create new column titled "Win_Per_Start" showing the percentage that pitcher wins based on the amount of start he made
+
+Pitcher_Full <- mutate(Pitcher_Full, Win_Per_Start = (Win_Pct / Count))
+
+# Removed all pitchers with less than 9 starts
+
+Pitcher10 <- filter(Pitcher_Full, Count > 9)
+
+# arranged in descending order the top 5 SP based of their win per start statistic
+
+Pitcher10 %>% 
++     arrange(desc(Win_Per_Start)) %>%
++     slice(1:5)

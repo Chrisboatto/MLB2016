@@ -1,0 +1,27 @@
+# Visualize the probability of the home team winning the above game over time, by using odds.converter to convert the MoneyUs2 column to probability.
+
+# I used the DPLYR package to create the data set based off the GameID solved from the previous question.
+
+Det_Game <- filter(MLB2016, GameID == "DET201607170")
+
+# I the used the pull function to pull the data from the Lines column.
+
+DET_Lines <- pull(Det_Game, Lines)
+
+# I then converted the list above into a data frame.
+
+DET_Lines_df <- as.data.frame(DET_Lines)
+
+# I used the odds.converter function to convert the MoneyUS2 column into a probaility metric. MoneyUS2 showed the probability of the home team winning the game, which in this case was the Detroit Tigers.
+
+Home_Team_Winpct <- odds.converter::odds.us2prob(DET_Lines_df$MoneyUS2)
+
+# I then bound the data set above to the DET_Lines_df data frame
+
+DET_Lines_df <- cbind(DET_Lines_df, Home_Team_Winpct)
+ 
+# Using the ggplot function I plotted the change in probabilities throughout the game.
+
+Det_Game_plot <- ggplot(DET_Lines_df, aes(x = DET_Lines_df$EnteredDateTimeET, y = DET_Lines_df$Home_Team_Winpct)) + geom_point() + geom_line()
+
+Det_Game_plot + labs(title = "Home Team Win Percentage Graph", x = "Time", y = "Win Percentage")

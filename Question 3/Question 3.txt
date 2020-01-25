@@ -1,0 +1,10 @@
+# Which game had the most odds changes?
+
+# The line below deterined which game of the season had the most amount of line changes within it.
+
+which.max(nchar(MLB2016$Lines))
+[1] 1364
+
+# I then indexed game 1364 within the GameID column to show the game that had the max amount of line changes
+
+MLB2016$GameID[1364]

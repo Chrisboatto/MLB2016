@@ -1,0 +1,13 @@
+# Clean pitching columns
+MLB2016 <- MLB2016 %>% 
+  mutate(AwayStartingPitcher = tolower(ifelse(grepl(" ", AwayStartingPitcher), 
+                                              AwayStartingPitcher,
+                                              paste(substring(AwayStartingPitcher, 1, 1),
+                                                    substring(AwayStartingPitcher, 2)))),
+         HomeStartingPitcher = tolower(ifelse(grepl(" ", HomeStartingPicher), 
+                                              HomeStartingPicher, 
+                                              paste(substring(HomeStartingPicher, 1, 1), 
+                                                    substring(HomeStartingPicher, 2)))), 
+         AwayStartingPitcher = gsub("\\.", "", AwayStartingPitcher), 
+         HomeStartingPitcher = gsub("\\.", "", HomeStartingPitcher)) %>%
+  select(-HomeStartingPicher)

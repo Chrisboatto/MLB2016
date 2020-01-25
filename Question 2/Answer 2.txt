@@ -1,0 +1,3 @@
+# Q2 Answer
+
+#Answer: 0.6368715

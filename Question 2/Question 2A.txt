@@ -1,0 +1,26 @@
+Plot the winning percentage of the Chicago Cubs as a function of time in 2016.
+
+# Converted the output of the Wins column from character to numeric
+
+Cubs_Wins$Wins [Cubs_Wins$Wins == "TRUE"] <- 1
+
+Cubs_Wins$Wins [Cubs_Wins$Wins == "FALSE"] <- 0
+
+# Quantified the cumulative sum of wins througout the season
+
+Cubs_Wins_1$Win_Total <- cumsum(Cubs_Wins$Wins)
+
+# Created a Game Total column with a range of 1 to 179 to count every game
+
+Cubs_Wins_1$Game_Total <- c(1:179)
+
+# Created the Win Percentage column using the mutate function in the DPLYR package
+
+Cubs_Wins_1 <- mutate(Cubs_Wins_1, Win_PCT = Win_Total / Game_Total)
+
+# Created a win percentage plot for the Chicago Cubs in 2016 based of the Date of the year. The graph is done using the ggplot function and is done to show the win percentagae as the season progressed
+
+Cubs_plot <- ggplot(Cubs_Wins, aes(x = Cubs_Wins$EventDateTimeET, y = Cubs_Wins_1$Win_PCT)) + geom_point() + geom_line()
+
+Cubs_plot + labs(title = "Cubs Win Percentage", y = "Win Percentage", x = "Month")
+

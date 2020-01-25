@@ -1,0 +1,25 @@
+# What was the final win percentage of the Chicago Cubs at the end of 2016?
+
+# I subset out any time the team "Chicago Cubs" appeared in the MLB2016 data set and named it Cubs
+
+Cubs <- filter(MLB2016, AwayTeam == "Chicago Cubs" | HomeTeam == "Chicago Cubs")
+
+# I then split the data set into a Home and Away data set
+
+Cubs_Home <- filter(Cubs, HomeTeam == "Chicago Cubs")
+
+Cubs_Away <- filter(Cubs, AwayTeam == "Chicago Cubs")
+
+# Created a column to which when the Cubs win in their respective data sets. When Cubs win it shows "TRUE" when Cubs lose it shows "FALSE"
+
+Cubs_Home <- mutate(Cubs_Home, Wins = FinalScoreHome > FinalScoreAway)
+
+Cubs_Away <- mutate(Cubs_Away, Wins = FinalScoreHome < FinalScoreAway)
+
+# Bound both data sets back together with the new columns created
+
+Cubs_Wins <- rbind(Cubs_Home, Cubs_Away)
+
+# Totaled up the amount of time the Wins column output is "TRUE" and divided it by the amount of games played by the Cubs that season
+
+sum(Cubs_Wins$Wins == "TRUE") / nrow(Cubs_Wins)

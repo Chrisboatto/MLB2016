@@ -1,0 +1,27 @@
+# Which team(s) played in the most double headers? (A double header consists of playing two games in one single day.)
+
+# Below I filter out all games that are not double headers. The DoubleHeaderGame column is a numeric column with a range of either 0 or 1; 1 meaning yes, 0 meaning no
+
+MLB2016_DH <- filter(MLB2016, DoubleHeaderGame > 0)
+
+# I then split the data into subsets based on the DoubleHeaderGame from the HomeTeam and AwayTeam columns. The split was done based on a sum of double headers per team in the columns.
+
+teams_pairs_with_double_header <- aggregate(DoubleHeaderGame~HomeTeam+AwayTeam, data=MLB2016_DH, sum, na.rm=TRUE)
+
+# I then counted the frequency of double headers within the "teams_pairs_double_header" into both Home and Away team frequency data sets.
+
+home_team_freq <- count(teams_pairs_with_double_header, HomeTeam, name='freq')
+names(home_team_freq) <- c('team', 'freq')
+
+away_team_freq <- count(teams_pairs_with_double_header, AwayTeam, name='freq')
+names(away_team_freq) <- c('team', 'freq')
+
+# I then bound the two data sets from above.
+
+team_double_header_freq <- bind_rows(home_team_freq, away_team_freq) %>%
+                           group_by(team) %>%
+                           summarise_all(funs(sum(., na.rm = TRUE)))
+
+# Filter out the team that appears the most in the data set above.
+
+filter(team_double_header_freq, team_double_header_freq$freq == max(team_double_header_freq$freq))$team 
