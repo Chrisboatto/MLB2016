@@ -1,0 +1,186 @@
+---
+title: "Crescendo Technology"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+# install.packages("pinnacle.data")
+# install.packages("odds.converter")
+
+library(pinnacle.data)
+library(odds.converter)
+library(dplyr)
+
+data("MLB2016")
+?MLB2016
+
+# Clean pitching columns
+MLB2016 <- MLB2016 %>% 
+  mutate(AwayStartingPitcher = tolower(ifelse(grepl(" ", AwayStartingPitcher), 
+                                              AwayStartingPitcher,
+                                              paste(substring(AwayStartingPitcher, 1, 1),
+                                                    substring(AwayStartingPitcher, 2)))),
+         HomeStartingPitcher = tolower(ifelse(grepl(" ", HomeStartingPicher), 
+                                              HomeStartingPicher, 
+                                              paste(substring(HomeStartingPicher, 1, 1), 
+                                                    substring(HomeStartingPicher, 2)))), 
+         AwayStartingPitcher = gsub("\\.", "", AwayStartingPitcher), 
+         HomeStartingPitcher = gsub("\\.", "", HomeStartingPitcher)) %>%
+  select(-HomeStartingPicher)
+
+# Question 1
+
+MLB2016_DH <- filter(MLB2016, DoubleHeaderGame > 0)
+teams_pairs_with_double_header <- aggregate(DoubleHeaderGame~HomeTeam+AwayTeam, data=MLB2016_DH, sum, na.rm=TRUE)
+
+home_team_freq <- count(teams_pairs_with_double_header, HomeTeam, name='freq')
+names(home_team_freq) <- c('team', 'freq')
+
+away_team_freq <- count(teams_pairs_with_double_header, AwayTeam, name='freq')
+names(away_team_freq) <- c('team', 'freq')
+
+team_double_header_freq <- bind_rows(home_team_freq, away_team_freq) %>%
+                           group_by(team) %>%
+                           summarise_all(funs(sum(., na.rm = TRUE)))
+
+filter(team_double_header_freq, team_double_header_freq$freq == max(team_double_header_freq$freq))$team                           
+
+# Answer: San Diego Pagres, St. Louis Cardinals, Chicago Cubs, Baltimore Orioles, New York Mets, Pittsburgh Pirates, Minnesota Twins, 
+
+# Question 2
+
+Cubs <- filter(MLB2016, AwayTeam == "Chicago Cubs" | HomeTeam == "Chicago Cubs")
+
+Cubs_Home <- filter(Cubs, HomeTeam == "Chicago Cubs")
+
+Cubs_Away <- filter(Cubs, AwayTeam == "Chicago Cubs")
+
+Cubs_Home <- mutate(Cubs_Home, Wins = FinalScoreHome > FinalScoreAway)
+
+Cubs_Away <- mutate(Cubs_Away, Wins = FinalScoreHome < FinalScoreAway)
+
+Cubs_Wins <- rbind(Cubs_Home, Cubs_Away)
+
+sum(Cubs_Wins$Wins == "TRUE") / nrow(Cubs_Wins)
+
+#Answer: 0.6368715
+
+# Question 2a
+
+Cubs_Wins$Wins [Cubs_Wins$Wins == "TRUE"] <- 1
+
+Cubs_Wins$Wins [Cubs_Wins$Wins == "FALSE"] <- 0
+
+Cubs_Wins_1$Win_Total <- cumsum(Cubs_Wins$Wins)
+
+Cubs_Wins_1$Game_Total <- c(1:179)
+
+Cubs_Wins_1 <- mutate(Cubs_Wins_1, Win_PCT = Win_Total / Game_Total)
+
+Cubs_plot <- ggplot(Cubs_Wins, aes(x = Cubs_Wins$EventDateTimeET, y = Cubs_Wins_1$Win_PCT)) + geom_point() + geom_line()
+
+Cubs_plot + labs(title = "Cubs Win Percentage", y = "Win Percentage", x = "Month")
+
+
+# Question 3
+
+which.max(nchar(MLB2016$Lines))
+[1] 1364
+
+MLB2016$GameID[1364]
+
+
+#Answer
+
+[1] "DET201607170"
+
+
+# Question 3a
+
+Det_Game <- filter(MLB2016, GameID == "DET201607170")
+
+DET_Lines <- pull(Det_Game, Lines)
+
+DET_Lines_df <- as.data.frame(DET_Lines)
+
+Home_Team_Winpct <- odds.converter::odds.us2prob(DET_Lines_df$MoneyUS2)
+
+DET_Lines_df <- cbind(DET_Lines_df, Home_Team_Winpct)
+ 
+Det_Game_plot <- ggplot(DET_Lines_df, aes(x = DET_Lines_df$EnteredDateTimeET, y = DET_Lines_df$Home_Team_Winpct)) + geom_point() + geom_line()
+
+Det_Game_plot + labs(title = "Home Team Win Percentage Graph", x = "Time", y = "Win Percentage")
+
+# Question 4
+
+MLB2016_1 <- unnest(MLB2016, Lines)
+
+MLB2016_1 <- mutate(MLB2016_1, Away_Win_Pct =  odds.converter::odds.us2prob(MLB2016_1$MoneyUS1))
+
+MLB2016_1 <- mutate(MLB2016_1, Home_Win_Pct =  odds.converter::odds.us2prob(MLB2016_1$MoneyUS2))
+
+MLB2016_1 <- mutate(MLB2016_1, Win_Pct_Diff = Away_Win_Pct - Home_Win_Pct)
+
+MLB2016_2 <- MLB2016_1 %>% group_by(GameID) %>% filter(EnteredDateTimeUTC == max(EnteredDateTimeUTC)) %>% ungroup()
+
+AwayPitcher <- select(MLB2016_2, c(AwayStartingPitcher, Away_Win_Pct))
+
+HomePitcher <- select(MLB2016_2, c(HomeStartingPitcher, Home_Win_Pct))
+
+AwayPitcher <- mutate(AwayPitcher, Count = 1)
+
+HomePitcher <- mutate(HomePitcher, Count = 1)
+
+AwayPitcher <- rename(AwayPitcher, Pitcher = AwayStartingPitcher)
+
+HomePitcher <- rename(HomePitcher, Pitcher = HomeStartingPitcher)
+
+AwayPitcher <- rename(AwayPitcher, Win_Pct = Away_Win_Pct)
+
+HomePitcher <- rename(HomePitcher, Win_Pct = Home_Win_Pct)
+
+Pitcher_Full <- rbind.fill(HomePitcher, AwayPitcher)
+
+Pitcher_Full$Count <- as.numeric(Pitcher_Full$Count)
+
+Pitcher_Count_agg <- aggregate(Pitcher_Full$Count ~ Pitcher_Full$Pitcher, data = Pitcher_Full, FUN = sum, na.rm = TRUE)
+
+Pitcher_Win_agg <- aggregate(Pitcher_Full$Win_Pct ~ Pitcher_Full$Pitcher, data = Pitcher_Full, FUN = sum, na.rm = TRUE)
+
+Pitcher_Win_agg <- rename(Pitcher_Win_agg, Pitcher = 'Pitcher_Full$Pitcher')
+
+Pitcher_Full <- cbind(Pitcher_Count_agg, Pitcher_Win_agg)
+
+Pitcher_Full <- select(Pitcher_Full, -c(Pitcher))
+
+ Pitcher_Full <- rename(Pitcher_Full, Pitcher = 'Pitcher_Full$Pitcher')
+
+Pitcher_Full <- rename(Pitcher_Full, Count = 'Pitcher_Full$Count')
+
+Pitcher_Full <- rename(Pitcher_Full, Win_Pct = 'Pitcher_Full$Win_Pct')
+
+ Pitcher_Full <- mutate(Pitcher_Full, Win_Per_Start = (Win_Pct / Count))
+
+Pitcher10 <- filter(Pitcher_Full, Count > 9)
+
+Pitcher10 %>% 
++     arrange(desc(Win_Per_Start)) %>%
++     slice(1:5)
+
+#Answer Clayton Kershaw
+
+      Pitcher Count  Win_Pct Win_Per_Start
+1   c kershaw    25 16.97155     0.6788621
+2   j arrieta    35 23.20879     0.6631083
+3  m scherzer    36 23.49800     0.6527222
+4    j lester    37 24.02386     0.6492935
+5 s strasburg    24 15.33244     0.6388515
