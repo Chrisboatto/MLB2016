@@ -1,7 +1,8 @@
 # Packages needed to complete the tasks
 
-# install.packages("pinnacle.data")
-# install.packages("odds.converter")
+install.packages("pinnacle.data")
+install.packages("odds.converter")
+install.packages("dplyr")
 
 library(pinnacle.data)
 library(odds.converter)

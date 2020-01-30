@@ -23,3 +23,7 @@ Cubs_Wins <- rbind(Cubs_Home, Cubs_Away)
 # Totaled up the amount of time the Wins column output is "TRUE" and divided it by the amount of games played by the Cubs that season
 
 sum(Cubs_Wins$Wins == "TRUE") / nrow(Cubs_Wins)
+
+# Q2 Answer
+
+#Answer: 0.6368715

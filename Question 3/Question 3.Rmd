@@ -8,3 +8,7 @@ which.max(nchar(MLB2016$Lines))
 # I then indexed game 1364 within the GameID column to show the game that had the max amount of line changes
 
 MLB2016$GameID[1364]
+
+# Question 3 Answer
+
+# "DET201607170"
