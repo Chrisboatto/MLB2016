@@ -22,6 +22,7 @@ To install the required packages and load the dataset required for this task, ru
 
 There are various questions that I answered using the data set, but this is not to stop you from continuing you research through the data. 
 
+![Image of Detroit Tigers Win](https://raw.githubusercontent.com/Chrisboatto/MLB2016/master/Question%203/Det%20Game%20Plot.jpeg)
 
 
 **Lets Get Started!!**
